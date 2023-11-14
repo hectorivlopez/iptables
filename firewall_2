@@ -1,0 +1,26 @@
+#! /bin/bash
+
+# Flush
+iptables -F
+iptables -X
+iptables -Z
+iptables -t nat -F
+
+# Default rules
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+
+# Setting up the virtual network
+ifconfig xenbr0 10.0.0.1 up
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# NAT
+iptables -A FORWARD -i xenbr0 -j ACCEPT
+iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
+
+# Access to services
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to 10.0.0.2:80
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 21 -j DNAT --to 10.0.0.6:80
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 8080 -j DNAT --to 10.0.0.5:80
+
