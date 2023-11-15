@@ -26,4 +26,3 @@ iptables -A INPUT -s 192.168.73.46 -i eno1 -j DROP
 iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to 10.0.0.2:80		# HTTP
 iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 21 -j DNAT --to 10.0.0.6:21		# FTP
 iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 8080 -j DNAT --to 10.0.0.5:80	# WebDAV
-

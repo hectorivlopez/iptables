@@ -7,9 +7,9 @@ iptables -Z
 iptables -t nat -F
 
 # Default rules
-iptables -P INPUT ACCEPT
-iptables -P OUTPUT ACCEPT
-iptables -P FORWARD ACCEPT
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
 
 # Setting up the virtual network
 ifconfig xenbr0 10.0.0.1 up
@@ -19,3 +19,17 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -A FORWARD -i xenbr0 -j ACCEPT
 iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
 
+# Allow incoming traffic on eno1
+iptables -A INPUT -i eno1 -p tcp --dport 80 -j ACCEPT		# HTTP
+iptables -A INPUT -i eno1 -p tcp --dport 21 -j ACCEPT		# FTP
+iptables -A INPUT -i eno1 -p tcp --dport 8080 -j ACCEPT	# WebDAV
+
+# Access to services
+iptables -A INPUT -i xenbr0 -p tcp --dport 80 -j ACCEPT			# HTTP
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to 10.0.0.2:80
+
+iptables -A INPUT -i xenbr0 -p tcp --dport 21 -j ACCEPT			# FTP
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 21 -j DNAT --to 10.0.0.6:21
+
+iptables -A INPUT -i xenbr0 -p tcp --dport 8080 -j ACCEPT		# WebDAV
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 8080 -j DNAT --to 10.0.0.5:80
